@@ -9,9 +9,9 @@
 
 ## About TheOneResume
 
-		TheOneResume attempts to bring together your projects, internships, organisations and work experience together coming from 
-- [Github](https://github.com).
-- [LinkedIn](https://linkedin.com).
+TheOneResume attempts to bring together your projects, internships, organisations and work experience together coming from 
+		- [Github](https://github.com).
+		- [LinkedIn](https://linkedin.com).
 
 TheOneResume is accessible, yet powerful, providing tools needed for creating your Resume just by authorising the app to use your Profile data.
 
