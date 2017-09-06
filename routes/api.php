@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Http\Request;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -13,6 +12,34 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+Route::resource('users', 'User\UserController', ['except'=>['create', 'edit']]);
+
+Route::get('login', 'Auth\LoginController@showLoginForm')->name('login')->middleware('web');//if declared in web.php then not working
+Route::post('login', 'User\UserController@login');
+Route::get('logout', 'User\UserController@logout')->name('logout');
+
+Route::post('refresh', 'User\UserController@refresh');
+
+
+Route::get('register', 'Auth\RegisterController@showRegistrationForm')->name('register')->middleware('web');;
+Route::post('register', 'User\UserController@store');
+
+// First route that user visits on consumer app
+Route::get('/user/github', 'foreignApi\githubController@makeRequest')->name('getGitToken');
+
+// Route that user is forwarded back to after approving on server
+Route::get('/oauth2/github','foreignApi\githubController@getRequest');
+
+//github endpoints
+Route::get('/user/repos','foreignApi\githubController@getRepos');
+Route::get('/user','foreignApi\githubController@getAuthUser');
+Route::get('/repos/{owner}/{repo}/commits','foreignApi\githubController@getRepoCommits');
+Route::get('/repos/{owner}/{repo}/pulls','foreignApi\githubController@getRepoPulls');
+
+
+Route::get('/createCache','foreignApi\githubController@storeAccessTokenInCache');
+Route::get('/clearCache','foreignApi\githubController@destroyCache');
