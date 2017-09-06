@@ -43,3 +43,6 @@ Route::get('/repos/{owner}/{repo}/pulls','foreignApi\githubController@getRepoPul
 
 Route::get('/createCache','foreignApi\githubController@storeAccessTokenInCache');
 Route::get('/clearCache','foreignApi\githubController@destroyCache');
+
+//developer and client
+Route::get('/developer/clients','developer\admin\clientController@createClient')->name('create-client');
