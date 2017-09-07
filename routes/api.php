@@ -16,7 +16,7 @@ use Illuminate\Http\Request;
 //     return $request->user();
 // });
 
-Route::resource('users', 'User\UserController', ['except'=>['create', 'edit']]);
+Route::resource('users', 'User\UserController', ['only'=>['store']]);
 
 Route::get('login', 'Auth\LoginController@showLoginForm')->name('login')->middleware('web');//if declared in web.php then not working
 Route::post('login', 'User\UserController@login');
@@ -39,6 +39,9 @@ Route::get('/user/repos','foreignApi\githubController@getRepos');
 Route::get('/user','foreignApi\githubController@getAuthUser');
 Route::get('/repos/{owner}/{repo}/commits','foreignApi\githubController@getRepoCommits');
 Route::get('/repos/{owner}/{repo}/pulls','foreignApi\githubController@getRepoPulls');
+Route::get('/users/{owner}/orgs','foreignApi\githubController@getUserOrgs');
+Route::get('/orgs/{orgs}','foreignApi\githubController@getOrgs');
+Route::get('/orgs/{orgs}/projects','foreignApi\githubController@getOrgsProjects');
 
 
 Route::get('/createCache','foreignApi\githubController@storeAccessTokenInCache');

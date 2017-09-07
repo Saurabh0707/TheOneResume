@@ -33,8 +33,8 @@ class UserController extends ApiController
 
     public function index()
     {
-        $users = User::all();
-        return $this->showAll($users);
+        // $users = User::all();
+        // return $this->showAll($users);
     }
 
     /**
@@ -42,10 +42,10 @@ class UserController extends ApiController
      *
      * @return \Illuminate\Http\Response
      */
-    // public function create(Request $request)
-    // {
+    public function create(Request $request)
+    {
          
-    // }
+    }
 
     /**
      * Register a user.
@@ -87,8 +87,8 @@ class UserController extends ApiController
     public function show($id)
     {
         
-        $user= User::findOrFail($id);
-        return $this->showOne($user);
+        // $user= User::findOrFail($id);
+        // return $this->showOne($user);
     }
 
     /**
@@ -97,10 +97,10 @@ class UserController extends ApiController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    // public function edit($id)
-    // {
-    //     //
-    // }
+    public function edit($id)
+    {
+        //
+    }
 
     /**
      * Update the specified resource in storage.
