@@ -74,7 +74,9 @@ class gitHubController extends ApiController
 							        	'Authorization'	=> 'Bearer '.$token,
 			    					]
 					]);
-			   		return $resp->getbody();  
+			   		$data = json_decode((string) $resp->getBody(), true);
+		    		return response()->json(['data'=>$data, 'code'=>'200'], '200');
+
 	            }   
 	            else
 	            {
@@ -107,7 +109,8 @@ class gitHubController extends ApiController
 						        	'Authorization'	=> 'Bearer '.$token,
 	        					]
 	    		]);
-	    		return $resp->getbody();
+	    		$data = json_decode((string) $resp->getBody(), true);
+		    	return response()->json(['data'=>$data, 'code'=>'200'], '200');
 
             }   
             else
@@ -145,7 +148,9 @@ class gitHubController extends ApiController
 							        	'Authorization'	=> 'Bearer '.$token,
 		        					]
 		    		]);
-		    		return $resp->getbody();
+		    		//$data = (string)$resp->getbody();
+		    		$data = json_decode((string) $resp->getBody(), true);
+		    		return response()->json(['data'=>$data, 'code'=>'200'], '200');
 
 	            }   
 	            else
@@ -184,8 +189,8 @@ class gitHubController extends ApiController
 							        	'Authorization'	=> 'Bearer '.$token,
 		        					]
 		    		]);
-		    		return $resp->getbody();
-
+		    		$data = json_decode((string) $resp->getBody(), true);
+		    		return response()->json(['data'=>$data, 'code'=>'200'], '200');
 	            }   
 	            else
 	            {
@@ -256,7 +261,8 @@ class gitHubController extends ApiController
 									        	'Authorization'	=> 'Bearer '.$token,
 				        					]
 				    		]);
-				    		return $resp->getbody();
+				    		$data = json_decode((string) $resp->getBody(), true);
+		    				return response()->json(['data'=>$data, 'code'=>'200'], '200');
 
 			            }   
 			            else
@@ -292,8 +298,8 @@ class gitHubController extends ApiController
 							        	'Authorization'	=> 'Bearer '.$token,
 		        					]
 		    		]);
-		    		return $resp->getbody();
-
+		    		$data = json_decode((string) $resp->getBody(), true);
+		    		return response()->json(['data'=>$data, 'code'=>'200'], '200');
 	            }   
 	            else
 	            {
@@ -318,7 +324,7 @@ class gitHubController extends ApiController
     	Cache::forever('git_Oauth_token',$data);
     	return response()->json(['message'=>'Success', 'code'=>'200', 'access_token'=>Cache::get('git_Oauth_token')], '200');	
     }
-    // needs to called during logout
+    
     public function destroyCache()
     {
         Cache::forget('git_Oauth_token');
