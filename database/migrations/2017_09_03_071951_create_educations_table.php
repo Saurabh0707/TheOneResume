@@ -22,6 +22,8 @@ class CreateEducationsTable extends Migration
             $table->double('percentage',4,2);
             $table->integer('user_id');
             $table->timestamps();
+            
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

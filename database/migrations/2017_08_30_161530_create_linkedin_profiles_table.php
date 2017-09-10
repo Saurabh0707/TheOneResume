@@ -14,19 +14,18 @@ class CreateProfilesTable extends Migration
     public function up()
     {
         //
-        Schema::create('profiles', function (Blueprint $table) {
+        Schema::create('linkedin_profiles', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('name');
-            $table->string('mobile');
-            $table->string('email')->unique();
-            $table->string('headline');
-            $table->string('profile_url');
-            $table->string('job_title');
-            $table->string('publicProfileUrl');
+            $table->string('currentlyWorkingAt');
+            $table->string('profileImageUrl');
+            $table->string('currentlyWorkingAs');
+            $table->string('profileUrl');
             $table->string('summary');
             $table->integer('user_id')->unique();
             $table->rememberToken();
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
@@ -38,6 +37,6 @@ class CreateProfilesTable extends Migration
     public function down()
     {
         //
-        Schema::dropIfExists('profiles');
+        Schema::dropIfExists('linkedin_profiles');
     }
 }

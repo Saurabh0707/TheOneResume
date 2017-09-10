@@ -23,6 +23,8 @@ class CreateCompaniesTable extends Migration
             $table->date('ended_on');
             $table->string('title');
             $table->timestamps();
+            
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
