@@ -128,7 +128,6 @@ class UserController extends ApiController
     public function login(Request $request)
     {
          
-        // dd($request);
         $rules = [
                         'email'=>'required',
                         'password'=>'required|min:6',
@@ -167,7 +166,6 @@ class UserController extends ApiController
         $proxy=Request::create('oauth/token','POST');
         return Route::dispatch($proxy);
     }
-
 
     public function logout(Request $request)
     {

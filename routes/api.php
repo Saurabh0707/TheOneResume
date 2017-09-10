@@ -35,11 +35,12 @@ Route::get('/user/github', 'foreignApi\githubController@makeRequest')->name('get
 Route::get('/oauth2/github','foreignApi\githubController@getRequest');
 
 //github endpoints
-Route::get('/user/repos','foreignApi\githubController@getRepos');
-Route::get('/user','foreignApi\githubController@getAuthUser');
-Route::get('/repos/{owner}/{repo}/commits','foreignApi\githubController@getRepoCommits');
-Route::get('/repos/{owner}/{repo}/pulls','foreignApi\githubController@getRepoPulls');
-Route::get('/users/{owner}/orgs','foreignApi\githubController@getUserOrgs');
+
+Route::get('/github/user','foreignApi\githubController@getAuthUserOnly');
+Route::get('/github/user/repos','foreignApi\githubController@getReposOnly');
+Route::get('/github/user/{user}','foreignApi\githubController@getUserDetails');
+Route::get('/github/user/repos/{owner}/{repo}','foreignApi\githubController@getRepoDetails');
+Route::get('/users/{owner}/orgs','foreignApi\githubController@getUserOrgsOnly');
 Route::get('/orgs/{orgs}','foreignApi\githubController@getOrgs');
 Route::get('/orgs/{orgs}/projects','foreignApi\githubController@getOrgsProjects');
 
