@@ -18,7 +18,7 @@ class gitHubController extends ApiController
     public function __construct()
     {
         //$this->middleware('checkOauthToken')->only(['getRepos', 'getAuthUser']);
-        $this->middleware('auth:api');
+        //$this->middleware('auth:api')->except(['makeRequest', 'getRequest']);//otherwise won't run on front end because we need to pass authorisation
     }
 	public function makeRequest(Request $request)
     {
@@ -57,7 +57,44 @@ class gitHubController extends ApiController
 	    return $this->storeAccessTokenInCache(substr($body,13,40));	
 	 	}
 
+	public function getAuthUserOnly(Request $request)
+    {
+    	try 
+        {
+            if(Cache::has('git_Oauth_token'))
+            {
+        
+                $token = Cache::get('git_Oauth_token');
+	    		$authUser = new \GuzzleHttp\Client;    	
+	    		$resp = $authUser->get('https://api.github.com/user',	    	 
+			    [
+			    	'headers' =>[
+						        	'Accept'     => 'application/json',
+						        	'Content-Type'     => 'application/json',
+						        	'Authorization'	=> 'Bearer '.$token,
+	        					]
+	    		]);
+	    		$data = json_decode((string) $resp->getBody(), true);
+		    	return response()->json(['data'=>$data, 'code'=>'200'], '200');
 
+            }   
+            else
+            {
+                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');       
+
+            }
+        } 
+        catch (ClientException $e) 
+        {
+            if($e->getResponse()->getStatusCode()==401)
+            {
+               return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');
+	            
+            }
+
+        }
+    }
+    	
 	public function getUserDetails(Request $request, $user)
     {
     		try
@@ -104,6 +141,41 @@ class gitHubController extends ApiController
 	            }
 	        }    		
     }
+
+    public function getReposOnly(Request $request)
+    {
+    		try
+	        {
+	            if(Cache::has('git_Oauth_token'))
+	            {
+	                $token = Cache::get('git_Oauth_token');
+					$repo = new \GuzzleHttp\Client;    	
+					$resp = $repo->get('https://api.github.com/user/repos',	    	 
+				    [
+				    	'headers' =>[
+							        	'Accept'     => 'application/json',
+							        	'Content-Type'     => 'application/json',
+							        	'Authorization'	=> 'Bearer '.$token,
+			    					]
+					]);
+			   		$data = json_decode((string) $resp->getBody(), true);
+		    		return response()->json(['data'=>$data, 'code'=>'200'], '200');
+
+	            }   
+	            else
+	            {
+	                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');
+	            }
+	        } 
+	        catch (ClientException $e) 
+	        {
+	            if($e->getResponse()->getStatusCode()==401)
+	            {
+	                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');	            
+	            }
+	        }    		
+    }
+
     
     public function getRepoDetails(Request $request, $owner, $repo)
     {
@@ -183,80 +255,11 @@ class gitHubController extends ApiController
 	        }    		
     }
     
-    public function getReposOnly(Request $request)
-    {
-    		try
-	        {
-	            if(Cache::has('git_Oauth_token'))
-	            {
-	                $token = Cache::get('git_Oauth_token');
-					$repo = new \GuzzleHttp\Client;    	
-					$resp = $repo->get('https://api.github.com/user/repos',	    	 
-				    [
-				    	'headers' =>[
-							        	'Accept'     => 'application/json',
-							        	'Content-Type'     => 'application/json',
-							        	'Authorization'	=> 'Bearer '.$token,
-			    					]
-					]);
-			   		$data = json_decode((string) $resp->getBody(), true);
-		    		return response()->json(['data'=>$data, 'code'=>'200'], '200');
-
-	            }   
-	            else
-	            {
-	                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');
-	            }
-	        } 
-	        catch (ClientException $e) 
-	        {
-	            if($e->getResponse()->getStatusCode()==401)
-	            {
-	                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');	            
-	            }
-	        }    		
-    }
-
-    public function getAuthUserOnly(Request $request)
-    {
-    	try 
-        {
-            if(Cache::has('git_Oauth_token'))
-            {
-        
-                $token = Cache::get('git_Oauth_token');
-	    		$authUser = new \GuzzleHttp\Client;    	
-	    		$resp = $authUser->get('https://api.github.com/user',	    	 
-			    [
-			    	'headers' =>[
-						        	'Accept'     => 'application/json',
-						        	'Content-Type'     => 'application/json',
-						        	'Authorization'	=> 'Bearer '.$token,
-	        					]
-	    		]);
-	    		$data = json_decode((string) $resp->getBody(), true);
-		    	return response()->json(['data'=>$data, 'code'=>'200'], '200');
-
-            }   
-            else
-            {
-                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');       
-
-            }
-        } 
-        catch (ClientException $e) 
-        {
-            if($e->getResponse()->getStatusCode()==401)
-            {
-               return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');
-	            
-            }
-
-        }
-    }
+   
+   
 
 	
-	 public function getUserOrgsOnly(Request $request)
+	 public function getUserOrgsOnly(Request $request, $username)
 		    {
 		    	try 
 		        {
@@ -265,7 +268,7 @@ class gitHubController extends ApiController
 		        
 		                $token = Cache::get('git_Oauth_token');
 			    		$authUser = new \GuzzleHttp\Client;    	
-			    		$resp = $authUser->get('https://api.github.com/users/'.$owner.'/orgs',	    	 
+			    		$resp = $authUser->get('https://api.github.com/users/'.$username.'/orgs',	    	 
 					    [
 					    	'headers' =>[
 								        	'Accept'     => 'application/json',
@@ -292,7 +295,47 @@ class gitHubController extends ApiController
 
 		        }
 		    }
-	 public function getOrgs(Request $request)
+
+		    public function getAuthUserOrgsOnly(Request $request)
+		    {
+		    	dd('dgfdssadsfg');
+		    	try 
+		        {
+		            if(Cache::has('git_Oauth_token'))
+		            {
+		        
+		                $token = Cache::get('git_Oauth_token');
+		                // dd($token);
+			    		$authUser = new \GuzzleHttp\Client;    	
+			    		$resp = $authUser->get('https://api.github.com/user/orgs',	    	 
+					    [
+					    	'headers' =>[
+								        	'Accept'     => 'application/json',
+								        	'Content-Type'     => 'application/json',
+								        	'Authorization'	=> 'Bearer '.$token,
+			        					]
+			    		]);
+			    		return $resp->getbody();
+
+		            }   
+		            else
+		            {
+		                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');
+			            
+
+		            }
+		        } 
+		        catch (ClientException $e) 
+		        {
+		            if($e->getResponse()->getStatusCode()==401)
+		            {
+		                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');		            
+		            }
+
+		        }
+		    }
+	 
+	 public function getOrgs(Request $request, $orgs)
 			    {
 			    	try 
 			        {
@@ -329,8 +372,10 @@ class gitHubController extends ApiController
 
 			        }
 			    }
-	    public function getOrgsProjects(Request $request)
+
+	    public function getOrgsProjects(Request $request, $orgs)
 	    {
+	    	//dd(Cache::get('git_Oauth_token'));
 	    	try 
 	        {
 	            if(Cache::has('git_Oauth_token'))
