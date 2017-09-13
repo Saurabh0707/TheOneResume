@@ -29,24 +29,11 @@ class UserController extends ApiController
     {
         $this->middleware('auth:api')->except(['create','login']);
         $this->client= Client::find(6);
+        //client will send id from front end. 
+        //For now it's hard-coded
     }
 
-    public function index()
-    {
-        // $users = User::all();
-        // return $this->showAll($users);
-    }
-
-    /**
-     * Show the form for creating a registering the new user.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create(Request $request)
-    {
-         
-    }
-
+    
     /**
      * Register a user.
      *
@@ -76,53 +63,6 @@ class UserController extends ApiController
         $request->request->add($params);
         $makerequest=Request::create('oauth/token','POST');
         return Route::dispatch($makerequest);       
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        
-        // $user= User::findOrFail($id);
-        // return $this->showOne($user);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
     }
     
     public function login(Request $request)
