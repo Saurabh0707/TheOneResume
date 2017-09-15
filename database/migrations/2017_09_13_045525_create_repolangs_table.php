@@ -18,6 +18,7 @@ class CreateRepolangsTable extends Migration
             $table->integer('githubrepo_id')->unsigned();            
             $table->string('name');
             $table->unsignedInteger('lines');
+            $table->timestamps();
         });
         Schema::table('repolangs', function (Blueprint $table) 
         {

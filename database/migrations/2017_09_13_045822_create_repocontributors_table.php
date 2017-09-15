@@ -18,6 +18,7 @@ class CreateRepocontributorsTable extends Migration
             $table->integer('githubrepo_id')->unsigned();
             $table->string('name');
             $table->unsignedInteger('contributions');
+            $table->timestamps();
         });
         Schema::table('repocontributors', function (Blueprint $table) 
         {

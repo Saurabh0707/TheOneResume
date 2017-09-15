@@ -21,6 +21,7 @@ class CreateRepocommitsTable extends Migration
             $table->string('message');
             $table->dateTimeTz('commit_created_at');
             $table->dateTimeTz('commit_updated_at');
+            $table->timestamps();
         });
         Schema::table('repocommits', function (Blueprint $table) 
         {

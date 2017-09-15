@@ -23,8 +23,7 @@ class UserController extends ApiController
      * @return \Illuminate\Http\Response
      */
     private $client;
-
-
+ 
     public function __construct()
     {
         $this->middleware('auth:api')->except(['create','login']);
@@ -32,8 +31,8 @@ class UserController extends ApiController
         //client will send id from front end. 
         //For now it's hard-coded
     }
+        /**
 
-    
     /**
      * Register a user.
      *
@@ -57,7 +56,7 @@ class UserController extends ApiController
             'client_secret'=>$this->client->secret,
             'username'=>request('email'),
             'password'=>request('password'),
-            'scope'=>'*'
+            'scope'=>'*',
         ];
 
         $request->request->add($params);

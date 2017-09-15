@@ -25,6 +25,7 @@ class CreateGithubusersTable extends Migration
             $table->dateTimeTz('user_updated_at');
             $table->unsignedInteger('public_repos');
             $table->unsignedInteger('public_gists');
+            $table->timestamps();
         });
         Schema::table('githubusers', function (Blueprint $table) 
         {

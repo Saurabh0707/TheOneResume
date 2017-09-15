@@ -17,14 +17,9 @@ use Illuminate\Http\Request;
 // });
 
 Route::resource('users', 'User\UserController', ['only'=>['store']]);
-
-Route::get('login', 'Auth\LoginController@showLoginForm')->name('login')->middleware('web');//if declared in web.php then not working
 Route::post('login', 'User\UserController@login');
 Route::get('logout', 'User\UserController@logout')->name('logout');
-
 Route::post('refresh', 'User\UserController@refresh');
-
-Route::get('register', 'Auth\RegisterController@showRegistrationForm')->name('register')->middleware('web');;
 Route::post('register', 'User\UserController@store');
 
 // First route that user visits on consumer app
@@ -60,3 +55,6 @@ Route::get('/clearCache','foreignApi\githubController@destroyCache');
 
 //developer and client
 Route::get('/developer/clients','developer\admin\clientController@createClient')->name('create-client');
+
+//get user's all github data
+Route::get('/github/thisuser','foreignApi\githubController@showdata');

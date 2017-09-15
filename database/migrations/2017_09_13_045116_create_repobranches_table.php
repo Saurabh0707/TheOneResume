@@ -17,6 +17,7 @@ class CreateRepobranchesTable extends Migration
             $table->increments('id')->unsigned();
             $table->integer('githubrepo_id')->unsigned();            
             $table->string('name');
+            $table->timestamps();
         });
         Schema::table('repobranches', function (Blueprint $table) 
         {

@@ -28,6 +28,7 @@ class CreateGithubreposTable extends Migration
             $table->unsignedInteger('no_of_branches');
             $table->unsignedInteger('no_of_pullrequests');
             $table->unsignedInteger('no_of_contributors');
+            $table->timestamps();
         });
         Schema::table('githubrepos', function (Blueprint $table) 
         {
