@@ -31,8 +31,7 @@ class UserController extends ApiController
         //client will send id from front end. 
         //For now it's hard-coded
     }
-        /**
-
+      
     /**
      * Register a user.
      *
@@ -49,7 +48,6 @@ class UserController extends ApiController
         $this->validate($request,$rules);
 
         $user = User::Create($request->all());
-        //return $this->showOne($user,201);
         $params=[
             'grant_type'=>'password',
             'client_id'=>$this->client->id,

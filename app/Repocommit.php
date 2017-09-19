@@ -11,7 +11,7 @@ class Repocommit extends Model
      *
      * @var array
      */
-    //protected $fillable = [];
+    protected $fillable = ['sha','author','committer','message','commit_created_at','commit_updated_at' ];
 
     /**
      * The attributes that should be hidden for arrays.

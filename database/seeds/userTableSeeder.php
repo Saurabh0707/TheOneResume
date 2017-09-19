@@ -11,7 +11,7 @@ class userTableSeeder extends Seeder
      */
     public function run()
     {
-        $userQuantity= 10;
+        $userQuantity= 1;
         factory(App\User::class, $userQuantity)->create()->each(function($u) {
 	      $u->githubusers()->save(factory(App\Githubuser::class)->make());
 	  });

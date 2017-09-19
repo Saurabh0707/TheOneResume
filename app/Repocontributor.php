@@ -11,9 +11,7 @@ class Repocontributor extends Model
      *
      * @var array
      */
-    // protected $fillable = [
-    //     'name', 'email', 'password',
-    // ];
+    protected $fillable = ['name','contributions'];
 
     /**
      * The attributes that should be hidden for arrays.

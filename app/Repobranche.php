@@ -11,9 +11,7 @@ class Repobranche extends Model
      *
      * @var array
      */
-    // protected $fillable = [
-    //     'name', 'email', 'password',
-    // ];
+    protected $fillable = ['name'];
 
     /**
      * The attributes that should be hidden for arrays.

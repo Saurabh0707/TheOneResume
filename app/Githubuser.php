@@ -11,9 +11,7 @@ class Githubuser extends Model
      *
      * @var array
      */
-    // protected $fillable = [
-    //     'name', 'email', 'password',
-    // ];
+    protected $fillable = ['username','html_url','name','company','location','user_created_at','user_updated_at','public_repos','public_gists'];
 
     /**
      * The attributes that should be hidden for arrays.

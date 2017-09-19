@@ -11,9 +11,7 @@ class Repolang extends Model
      *
      * @var array
      */
-    // protected $fillable = [
-    //     'name', 'email', 'password',
-    // ];
+    protected $fillable = ['name','lines'];
 
     /**
      * The attributes that should be hidden for arrays.

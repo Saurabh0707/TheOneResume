@@ -41,7 +41,7 @@ $factory->define(App\Githubuser::class, function (Faker\Generator $faker) {
 });
 $factory->define(App\Githubrepo::class, function (Faker\Generator $faker) {
     return [
-        'githubuser_id' => function() { return App\User::first()->id ?: factory(App\User::class)->create()->id;},
+        'githubuser_id' => function() { return App\User::find('1')->id ?: factory(App\User::class)->create()->id;},
         'owner' => $faker->name,
         'name' => $faker->name,
         'html_url' => $faker->url,
@@ -66,6 +66,7 @@ $factory->define(App\Repocommit::class, function (Faker\Generator $faker) {
     static $password;
 
     return [
+        'sha'   => sha1(str_shuffle('ghjklkjhgfghjklkjhkjhgjkjhg')),
         'author' => $faker->name,
         'committer' => $faker->name,
         'message' =>$faker->sentence(5),
