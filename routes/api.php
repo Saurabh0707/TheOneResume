@@ -30,11 +30,11 @@ Route::get('/oauth2/github','foreignApi\githubController@getRequest');
 
 //github endpoints
 //userRepo
-Route::get('/github/user','foreignApi\githubController@getAuthUserOnly');
-Route::get('/github/user/update','foreignApi\githubController@getAuthUserOnly');
+// Route::get('/github/user','foreignApi\githubController@getAuthUserOnly');
+// Route::get('/github/user/update','foreignApi\githubController@getAuthUserOnly');
 
-Route::get('/github/user/{user}','foreignApi\githubController@getUserDetails');//redundant
-Route::get('/github/user/{user}/update','foreignApi\githubController@getUserDetails');
+Route::get('/github/user','foreignApi\githubController@getUserDetails');
+Route::get('/github/user/update','foreignApi\githubController@getUserDetails');
 
 Route::get('/github/user/repos','foreignApi\githubController@getReposOnly');//redundant
 Route::get('/github/user/repos/update','foreignApi\githubController@getReposOnly');

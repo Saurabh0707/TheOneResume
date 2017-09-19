@@ -25,7 +25,7 @@ class gitHubController extends ApiController
 
     public function __construct()
     {
-        $this->middleware('auth:api')->except(['makeRequest', 'getRequest']);//otherwise won't run on front end because we need to pass authorisation
+        $this->middleware('auth:api')->except(['makeRequest', 'getRequest', 'getUserDetails']);//otherwise won't run on front end because we need to pass authorisation
     }
 
 	 /* Display a user details.
@@ -50,6 +50,34 @@ class gitHubController extends ApiController
 	    {
 	    	 return response()->json(['message'=>'User Already Exists','code'=>406],406);
 	    }
+	    $this->insertIntoTables($user, $inputs);
+		return response()->json(['message' => 'Records Saved', 'code'=> 200],200);				          
+	}
+
+	public function update(Request $request)
+	{
+		$inputs = $request->all();
+	    
+		$x = Auth::user('api')->id;
+		$user= User::find($x);
+		
+		$existingUser  =  $user->githubusers()->where('username', $inputs['data']['userRepoData']['githubusers']['username'])->first();
+
+		if($existingUser)
+	    {
+	    	 return response()->json(['message'=>'User Not Found', 'code'=>404],404);
+	    }
+	    else
+	    {
+	    	$user->githubusers()->delete();	
+	    }
+	    $this->insertIntoTables($user, $inputs);
+	    return response()->json(['message' => 'Records Updated', 'code'=> 200],200);				          
+
+	}
+
+	private function insertIntoTables($inputs, $user)
+	{
 		foreach($inputs['data']['userRepoData']['githubusers'] as $githubuser)
 		{
             $insertGithubUser =[
@@ -122,100 +150,7 @@ class gitHubController extends ApiController
 	     			$insertedGithubRepoLang = $insertedGithubRepo->repolangs()->firstOrCreate($insertGithubRepoLangs);	   
 	     			}
 			}
-        }return response()->json(['message' => 'Records Saved', 'code'=> 200],200);				          
-	}
-
-	public function update(Request $request)
-	{
-		$inputs = $request->all();
-	    
-		$x = Auth::user('api')->id;
-		$user= User::find($x);
-		
-		$existingUser  =  $user->githubusers()->where('username', $inputs['data']['userRepoData']['githubusers']['username'])->first();
-
-		if($existingUser)
-	    {
-	    	 return response()->json(['message'=>'User Not Found', 'code'=>404],404);
-	    }
-	    else
-	    {
-	    	$user->githubusers()->delete();	
-	    }
-	    foreach($inputs['data']['userRepoData']['githubusers'] as $githubuser)
-		{
-            $insertGithubUser =[
-            		'username'			=>		$githubuser["username"],
-            		'html_url'			=>		$githubuser["html_url"],
-            		'name'				=>		$githubuser["name"],
-            		'company'			=>		$githubuser["company"],
-            		'location'			=>		$githubuser["location"],
-            		'user_created_at'	=>		$githubuser["user_created_at"],
-            		'user_updated_at'	=>		$githubuser["user_updated_at"],
-            		'public_repos'		=>		$githubuser["public_repos"],
-            		'public_gists'		=>		$githubuser["public_gists"],
-    		];
-
-    		$insertedGithubUser = $user->githubusers()->firstOrCreate($insertGithubUser);
-    		foreach($githubuser['githubrepos'] as $githubrepo)
-			{
-				 $insertGithubRepo =[
-            		'owner'					=>		$githubrepo["owner"],
-            		'name'					=>		$githubrepo["name"],
-            		'html_url'				=>		$githubrepo["html_url"],
-            		'clone_url'				=>		$githubrepo["clone_url"],
-            		'repo_created_at'		=>		$githubrepo["repo_created_at"],
-            		'repo_updated_at'		=>		$githubrepo["repo_updated_at"],
-            		'repo_pushed_at'		=>		$githubrepo["repo_pushed_at"],
-            		'public_repos'			=>		$githubrepo["public_repos"],
-            		'no_of_commits'			=>		$githubrepo["no_of_commits"],
-            		'no_of_branches'		=>		$githubrepo["no_of_branches"],
-            		'no_of_pullrequests'	=>		$githubrepo["no_of_pullrequests"],
-            		'no_of_contributors'	=>		$githubrepo["no_of_contributors"],
-    			];
-				$insertedGithubRepo = $insertedGithubUser->githubrepos()->firstOrCreate($insertGithubRepo);
-				foreach($githubrepo['repocommits'] as $repocommit)
-				{
-					$insertGithubRepoCommits =
-					[
-	            		'sha'						=>      $repocommit["sha"],
-	            		'author'					=>		$repocommit["author"],
-	            		'committer'					=>		$repocommit["committer"],
-	            		'message'				=>		$repocommit["message"],
-	            		'commit_created_at'				=>		$repocommit["commit_created_at"],
-	            		'commit_updated_at'		=>		$repocommit["commit_updated_at"],
-    				];
-    			 	$insertedGithubRepoCommit = $insertedGithubRepo->repocommits()->firstOrCreate($insertGithubRepoCommits);
-				}
-				foreach($githubrepo['repocontributors'] as $repocontributor)
-				{
-					$insertGithubRepoContributors =
-					[
-	            		'name'					=>		$repocontributor["name"],
-	            		'contributions'					=>		$repocontributor["contributions"],
-	           		];	
-	           		$insertedGithubRepoContributor = $insertedGithubRepo->repocontributors()->firstOrCreate($insertGithubRepoContributors);
-				}
-				foreach($githubrepo['repobranches'] as $repobranch)
-				{
-					$insertGithubRepoBranches =
-					[
-	            		'name'					=>		$repobranch["name"],
-	     			];	
-	     			$insertedGithubRepoBranch = $insertedGithubRepo->repobranches()->firstOrCreate($insertGithubRepoBranches);
-				}
-				foreach($githubrepo['repolangs'] as $repolang)
-				{
-					$insertGithubRepoLangs =
-					[
-	            		'name'					=>		$repolang["name"],
-	            		'lines'					=>		$repolang["lines"],
-	     			];	
-	     			$insertedGithubRepoLang = $insertedGithubRepo->repolangs()->firstOrCreate($insertGithubRepoLangs);	   
-	     			}
-			}
-        }return response()->json(['message' => 'Records Updated', 'code'=> 200],200);				          
-
+        }
 	}
 	 /* Get Token for a user from GithubApps.
 	 *
@@ -311,7 +246,7 @@ class gitHubController extends ApiController
 	 * @param  \Illuminate\Http\Request  $request
 	 *
 	 */
-		public function getUserDetails(Request $request, $user)
+		public function getUserDetails(Request $request)
 	    {
 	    		try
 		        {
@@ -325,9 +260,13 @@ class gitHubController extends ApiController
 								        	'Authorization'	=> 'Bearer '.$token,
 				    					]
 						]);
+						$promise = $repo->get('https://api.github.com/user');
+						$results = json_decode((string)$promise->getBody(),true);
+						dd($results);///////this is the result showing in postman
+						
 						$promises = [
 									    'user'   => $repo->getAsync('https://api.github.com/user'),
-									    //'userRepos' => $repo->getAsync('https://api.github.com/user/repos'),
+									    'userRepos' => $repo->getAsync('https://api.github.com/user/repos'),
 									    'userOrgs'  => $repo->getAsync('https://api.github.com/users/'.$user.'/orgs'),
 									];					
 						$results 		= Promise\unwrap($promises);
@@ -452,7 +391,6 @@ class gitHubController extends ApiController
 														'thisUserRepoCommits' =>$userRepoCommits,
 														'thisUserRepoPullRequests' =>$userRepoPullRequests,
 														'thisUserRepoContributors' =>$userRepoContributors,
-														// 'thisUserRepoCollaborators' =>'$userRepoCollaborators',
 														'thisUserRepoLanguages' =>$userRepoLanguages,
 														'thisUserRepoBranches' =>$userRepoBranches,
 														'thisUserRepoLabels' =>$userRepoLabels,
