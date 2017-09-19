@@ -12,14 +12,10 @@ use Illuminate\Http\Request;
 |
 */
 /**
-Routes for Login. logout, refresh-token
+Routes for Login. logout, refresh-token, register
 */
-Route::get('login', 'Auth\LoginController@showLoginForm')->name('login');
-Route::post('login', 'User\UserController@login');
-Route::get('logout', 'User\UserController@logout')->name('logout');
-Route::post('refresh', 'User\UserController@refresh');
-/**
-Routes for Register
-*/
-Route::get('register', 'Auth\RegisterController@showRegistrationForm')->name('register');
-Route::post('register', 'User\UserController@store');
+Route::post('login', 'LoginController@login')->name('login');
+Route::get('logout', 'LogoutController@logout')->name('logout');
+Route::post('refresh', 'LogoutController@refresh')->name('refresh');
+Route::post('register','RegisterController@register')->name('register');
+
