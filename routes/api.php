@@ -36,27 +36,15 @@ Route::get('/oauth2/github','foreignApi\githubController@getRequest');
 Route::get('/github/user','foreignApi\githubController@getUserDetails');
 Route::get('/github/user/update','foreignApi\githubController@getUserDetails');
 
-Route::get('/github/user/repos','foreignApi\githubController@getReposOnly');//redundant
+Route::get('/github/user/repos','foreignApi\githubController@getRepoDetails');//redundant
 Route::get('/github/user/repos/update','foreignApi\githubController@getReposOnly');
-
-Route::get('/github/user/repos/{owner}/{repo}','foreignApi\githubController@getRepoDetails');
-Route::get('/github/user/repos/{owner}/{repo}/update','foreignApi\githubController@getRepoDetails');
 
 Route::post('/github/users/store','foreignApi\githubController@store');
 Route::post('/github/users/update','foreignApi\githubController@update');
 
-//github and api both return null returns null even if orgs are private
-Route::get('/github/users/{username}/orgs','foreignApi\githubController@getUserOrgsOnly');
 //"githubmessage": "You need at least read:org scope or user scope to list your organizations.",
 //api is not entering getAuthUserOrgsOnly
 //Route::get('/github/user/orgs','foreignApi\githubController@getAuthUserOrgsOnly');
-
-//organisation information
-Route::get('/github/orgs/{orgs}','foreignApi\githubController@getOrgs');
-//not working
-//"githubmessage": "If you would like to help us test the Projects API during its preview period, you must specify a custom media type in the 'Accept' header. Please see the docs for full details.",
-//Route::get('/github/orgs/{orgs}/projects','foreignApi\githubController@getOrgsProjects');
-
 
 //get user's all github data
 Route::get('/github/thisuser','foreignApi\githubController@showdata');
