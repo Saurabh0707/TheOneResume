@@ -24,15 +24,10 @@ Route::post('register', 'User\UserController@store');
 
 // First route that user visits on consumer app
 Route::get('/user/github', 'foreignApi\githubController@makeRequest')->name('getGitToken');
-
 // Route that user is forwarded back to after approving on server
 Route::get('/oauth2/github','foreignApi\githubController@getRequest');
 
 //github endpoints
-//userRepo
-// Route::get('/github/user','foreignApi\githubController@getAuthUserOnly');
-// Route::get('/github/user/update','foreignApi\githubController@getAuthUserOnly');
-
 Route::get('/github/user','foreignApi\githubController@getUserDetails');
 Route::get('/github/user/update','foreignApi\githubController@getUserDetails');
 
@@ -42,11 +37,7 @@ Route::get('/github/user/repos/update','foreignApi\githubController@getReposOnly
 Route::post('/github/users/store','foreignApi\githubController@store');
 Route::post('/github/users/update','foreignApi\githubController@update');
 
-//"githubmessage": "You need at least read:org scope or user scope to list your organizations.",
-//api is not entering getAuthUserOrgsOnly
-//Route::get('/github/user/orgs','foreignApi\githubController@getAuthUserOrgsOnly');
-
-//get user's all github data
+//get user's all github data stored in db
 Route::get('/github/thisuser','foreignApi\githubController@showdata');
 
 //developer and client

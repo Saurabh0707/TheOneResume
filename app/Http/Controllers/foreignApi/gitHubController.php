@@ -25,7 +25,7 @@ class gitHubController extends ApiController
 
     public function __construct()
     {
-        $this->middleware('auth:api')->except(['makeRequest', 'getRequest', 'getUserDetails', 'getReposOnly', 'getRepoDetails']);//otherwise won't run on front end because we need to pass authorisation
+        $this->middleware('auth:api')->except(['makeRequest', 'getRequest']);
     }
 
 	 /* Display a user details.
@@ -56,8 +56,7 @@ class gitHubController extends ApiController
 
 	public function update(Request $request)
 	{
-		$inputs = $request->all();
-	    
+		$inputs = $request->all();	    
 		$x = Auth::user('api')->id;
 		$user= User::find($x);
 		
@@ -75,8 +74,197 @@ class gitHubController extends ApiController
 	    return response()->json(['message' => 'Records Updated', 'code'=> 200],200);				          
 
 	}
+	 /* Get Token for a user from GithubApps.
+	 *
+	 * @param  \Illuminate\Http\Request  $request
+	 * @return \Illuminate\Http\Response
+	 * client_id is the ID given by github to the API
+	 */
+	public function makeRequest(Request $request)
+	{        
+		$query = http_build_query([
+	        'client_id' => 'c98f06e52785cdf675ec',
+	        'redirect_uri' => 'http://localhost:8000/api/oauth2/github',
+	        'response_type' => 'code',
+	        'scope' => '*'
+	    ]);
+	    return redirect('https://github.com/login/oauth/authorize?' . $query);
+	}    
+	/* Get Response after approval by the server.
+	 *
+	 * @param  \Illuminate\Http\Request  $request
+	 * 
+	 * client_id is the ID given by github to the API
+	 * client_secret is the secret given by github to the api
+	 */
+    public function getRequest(Request $request)
+    {
+        
+    	$http = new \GuzzleHttp\Client;
 
-	private function insertIntoTables($inputs, $user)
+	    $response = $http->post('https://github.com/login/oauth/access_token', 
+	    	[
+		        'form_params' => [
+						            'grant_type' => 'authorization_code',
+						            'client_id' => 'c98f06e52785cdf675ec',
+						            'client_secret' => 'e93b809b53a6fed3289b780251220b1ef563ea6a',
+						            'redirect_uri' => 'http://localhost:8000/api/oauth2/github',
+						            'code' => $request->code
+		        				]
+		    ], 
+		    [
+		    	'headers' =>[
+					        	'Accept'     => 'application/json',
+					        	'Content-Type'     => 'application/json',
+        					]
+    		]);
+	    $body=$response->getBody();
+	    return $this->storeAccessTokenInCache(substr($body,13,40));	
+	 }
+	 /* Get Public User details without being authenticated.
+	 *
+	 * @param  \Illuminate\Http\Request  $request
+	 *
+	 */
+	public function getUserDetails(Request $request)
+    {
+    		try
+	        {
+	            if(Cache::has('git_Oauth_token'))
+	            {
+	                $token = Cache::get('git_Oauth_token');
+					$repo = new \GuzzleHttp\Client([
+				    	'headers' =>[
+							        	'Accept'     => 'application/json',
+							        	'Content-Type'     => 'application/json',
+							        	'Authorization'	=> 'Bearer '.$token,
+			    					]
+					]);
+					$promise = $repo->get('https://api.github.com/user');
+					$results = json_decode((string)$promise->getBody(),false);
+					$user = $results->login;
+					$promises = [
+								    'user'   => $repo->getAsync('https://api.github.com/user'),
+								    'userRepos' => $repo->getAsync('https://api.github.com/user/repos'),
+								    'userOrgs'  => $repo->getAsync('https://api.github.com/users/'.$user.'/orgs'),
+								];					
+					$results 		= Promise\unwrap($promises);
+					$results 		= Promise\settle($promises)->wait();
+					$authUser 		= json_decode((string)$results['user']['value']->getBody(),true);
+					$userRepos		= json_decode((string)$results['userRepos']['value']->getBody(),true);
+					
+					$userOrgs 		= json_decode((string)$results['userOrgs']['value']->getBody(),true);
+					
+			   		return response()->json(['data'=>
+												['user'=>$authUser,
+											  	 'userRepos'=>$userRepos,
+												 'userOrgs'=>$userOrgs,	  		   				 	           		 
+												 ]
+			   								], '200');
+	            }   
+	            else
+	            {
+	                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');
+	            }
+	        } 
+	        catch (ClientException $e) 
+	        {
+	            if($e->getResponse()->getStatusCode()==401)
+	            {
+	                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');	            
+	            }
+	        }    		
+    }
+	/* Get Authenticated User's Repository's all details at once.
+	*
+	* @param  \Illuminate\Http\Request  $request
+	*
+	*/
+    public function getRepoDetails(Request $request)
+    {
+    		try
+	        {
+	            if(Cache::has('git_Oauth_token'))
+	            {
+	                $token = Cache::get('git_Oauth_token');
+	                $client = new \GuzzleHttp\Client([
+				    	'headers' =>[
+							        	'Accept'     => 'application/json',
+							        	'Content-Type'     => 'application/json',
+							        	'Authorization'	=> 'Bearer '.$token,
+			    					]
+					]);
+					
+					$promise = $client->get('https://api.github.com/user/repos');
+					// $results = json_decode((string)$promise->getBody(),false);
+					$results = json_decode($promise->getBody()->getContents(),true);
+					$array	 = array();	
+					$new_array	 = array();	
+					for ($i	=0; $i < sizeof($results); $i++) 
+					{
+						$fullname = $results[$i]['full_name'];
+						$promises = [
+								    'userRepo'=> $client->getAsync('https://api.github.com/repos/'.$fullname),			    
+								    'userRepoCommits'   => $client->getAsync('https://api.github.com/repos/'.$fullname.'/commits'),
+								    'userRepoPullRequests' => $client->getAsync('https://api.github.com/repos/'.$fullname.'/pulls'),
+								    'userRepoContributors'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/contributors'),
+								    'userRepoLanguages'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/languages'),
+								    'userRepoBranches'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/branches'),
+								    'userRepoLabels'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/labels'),
+								    'userRepoEvents'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/issues/events'),
+								    'userRepoIssues'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/issues'),
+								    'userRepoIssuesComments'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/issues/comments'),
+								    'userRepoPullsComments'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/pulls/comments'),
+								    'userRepoMilestones'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/milestones'),
+								];
+					
+						$results2 				= Promise\unwrap($promises);
+						$results2 				= Promise\settle($promises)->wait();
+						$userRepo				= json_decode((string)$results2['userRepo']['value']->getBody(),true);
+						$userRepoCommits		= json_decode((string)$results2['userRepoCommits']['value']->getBody(),true);
+						$userRepoPullRequests 	= json_decode((string)$results2['userRepoPullRequests']['value']->getBody(),true);
+						$userRepoContributors	= json_decode((string)$results2['userRepoContributors']['value']->getBody(),true);
+						$userRepoLanguages 		= json_decode((string)$results2['userRepoLanguages']['value']->getBody(),true);
+						$userRepoBranches 		= json_decode((string)$results2['userRepoBranches']['value']->getBody(),true);
+						$userRepoLabels 		= json_decode((string)$results2['userRepoLabels']['value']->getBody(),true);
+						$userRepoEvents 		= json_decode((string)$results2['userRepoEvents']['value']->getBody(),true);
+						$userRepoIssues 		= json_decode((string)$results2['userRepoIssues']['value']->getBody(),true);
+						$userRepoIssuesComments = json_decode((string)$results2['userRepoIssuesComments']['value']->getBody(),true);
+						$userRepoPullsComments 	= json_decode((string)$results2['userRepoPullsComments']['value']->getBody(),true);
+						$userRepoMilestones 	= json_decode((string)$results2['userRepoMilestones']['value']->getBody(),true);
+						$results[$i]=array();
+						array_push($results[$i],[	
+													'thisUserRepo' =>$userRepo,
+													'thisUserRepoCommits' =>$userRepoCommits,
+													'thisUserRepoPullRequests' =>$userRepoPullRequests,
+													'thisUserRepoContributors' =>$userRepoContributors,
+													'thisUserRepoLanguages' =>$userRepoLanguages,
+													'thisUserRepoBranches' =>$userRepoBranches,
+													'thisUserRepoLabels' =>$userRepoLabels,
+													'thisUserRepoEvents ' =>$userRepoEvents ,
+													'thisUserRepoIssues =' =>$userRepoIssues,
+													'thisUserRepoIssuesComments' =>$userRepoIssuesComments,
+													'thisUserRepoPullsComments ' =>$userRepoPullsComments, 
+													'thisUserRepoMilestones' =>$userRepoMilestones,	 
+												]);	
+							array_push($array, $results[$i]);							
+					}
+					return response()->json(['data'=> $array],'200');
+				}   
+	            else
+	            {
+	                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');
+	            }
+	        } 
+	        catch (ClientException $e) 
+	        {
+	            if($e->getResponse()->getStatusCode()==401)
+	            {
+	                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');	            
+	            }
+	        }    		
+    }
+    private function insertIntoTables($inputs, $user)
 	{
 		foreach($inputs['data']['userRepoData']['githubusers'] as $githubuser)
 		{
@@ -152,244 +340,14 @@ class gitHubController extends ApiController
 			}
         }
 	}
-	 /* Get Token for a user from GithubApps.
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 * @return \Illuminate\Http\Response
-	 * client_id is the ID given by github to the API
-	 */
-	public function makeRequest(Request $request)
-    {        
-    	$query = http_build_query([
-	        'client_id' => 'c98f06e52785cdf675ec',
-	        'redirect_uri' => 'http://localhost:8000/api/oauth2/github',
-	        'response_type' => 'code',
-	        'scope' => '*'
-	    ]);
-	    return redirect('https://github.com/login/oauth/authorize?' . $query);
-    }    
-    /* Get Response after approval by the server.
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 * 
-	 * client_id is the ID given by github to the API
-	 * client_secret is the secret given by github to the api
-	 */
-	    public function getRequest(Request $request)
-	    {
-	        
-	    	$http = new \GuzzleHttp\Client;
-
-		    $response = $http->post('https://github.com/login/oauth/access_token', 
-		    	[
-			        'form_params' => [
-							            'grant_type' => 'authorization_code',
-							            'client_id' => 'c98f06e52785cdf675ec',
-							            'client_secret' => 'e93b809b53a6fed3289b780251220b1ef563ea6a',
-							            'redirect_uri' => 'http://localhost:8000/api/oauth2/github',
-							            'code' => $request->code
-			        				]
-			    ], 
-			    [
-			    	'headers' =>[
-						        	'Accept'     => 'application/json',
-						        	'Content-Type'     => 'application/json',
-	        					]
-	    		]);
-		    $body=$response->getBody();
-		    return $this->storeAccessTokenInCache(substr($body,13,40));	
-		 }
-		 /* Get Public User details without being authenticated.
-		 *
-		 * @param  \Illuminate\Http\Request  $request
-		 *
-		 */
-		public function getUserDetails(Request $request)
-	    {
-	    		try
-		        {
-		            if(Cache::has('git_Oauth_token'))
-		            {
-		                $token = Cache::get('git_Oauth_token');
-						$repo = new \GuzzleHttp\Client([
-					    	'headers' =>[
-								        	'Accept'     => 'application/json',
-								        	'Content-Type'     => 'application/json',
-								        	'Authorization'	=> 'Bearer '.$token,
-				    					]
-						]);
-						$promise = $repo->get('https://api.github.com/user');
-						$results = json_decode((string)$promise->getBody(),false);
-						$user = $results->login;
-						$promises = [
-									    'user'   => $repo->getAsync('https://api.github.com/user'),
-									    'userRepos' => $repo->getAsync('https://api.github.com/user/repos'),
-									    'userOrgs'  => $repo->getAsync('https://api.github.com/users/'.$user.'/orgs'),
-									];					
-						$results 		= Promise\unwrap($promises);
-						$results 		= Promise\settle($promises)->wait();
-						$authUser 		= json_decode((string)$results['user']['value']->getBody(),true);
-						$userRepos		= json_decode((string)$results['userRepos']['value']->getBody(),true);
-						
-						$userOrgs 		= json_decode((string)$results['userOrgs']['value']->getBody(),true);
-						
-				   		return response()->json(['data'=>
-													['user'=>$authUser,
-												  	 'userRepos'=>$userRepos,
-													 'userOrgs'=>$userOrgs,	  		   				 	           		 
-													 ]
-				   								], '200');
-		            }   
-		            else
-		            {
-		                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');
-		            }
-		        } 
-		        catch (ClientException $e) 
-		        {
-		            if($e->getResponse()->getStatusCode()==401)
-		            {
-		                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');	            
-		            }
-		        }    		
-	    }
-	 /* Get Authenticated User's Repository's all details at once.
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 *
-	 */
-	    public function getRepoDetails(Request $request)
-	    {
-	    		try
-		        {
-		            if(Cache::has('git_Oauth_token'))
-		            {
-		                $token = Cache::get('git_Oauth_token');
-		                $client = new \GuzzleHttp\Client([
-					    	'headers' =>[
-								        	'Accept'     => 'application/json',
-								        	'Content-Type'     => 'application/json',
-								        	'Authorization'	=> 'Bearer '.$token,
-				    					]
-						]);
-						
-						$promise = $client->get('https://api.github.com/user/repos');
-						$results = json_decode((string)$promise->getBody(),false);
-						$array	 = array();				
-						for ($i	=0; $i < sizeof($results); $i++) 
-						{
-							$fullname = $results[$i]->full_name;
-							$promises = [
-									    'userRepo'=> $client->getAsync('https://api.github.com/repos/'.$fullname),			    
-									    'userRepoCommits'   => $client->getAsync('https://api.github.com/repos/'.$fullname.'/commits'),
-									    'userRepoPullRequests' => $client->getAsync('https://api.github.com/repos/'.$fullname.'/pulls'),
-									    'userRepoContributors'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/contributors'),
-									    'userRepoLanguages'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/languages'),
-									    'userRepoBranches'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/branches'),
-									    'userRepoLabels'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/labels'),
-									    'userRepoEvents'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/issues/events'),
-									    'userRepoIssues'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/issues'),
-									    'userRepoIssuesComments'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/issues/comments'),
-									    'userRepoPullsComments'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/pulls/comments'),
-									    'userRepoMilestones'=>$client->getAsync('https://api.github.com/repos/'.$fullname.'/milestones'),
-									];
-						
-							$results2 				= Promise\unwrap($promises);
-							$results2 				= Promise\settle($promises)->wait();
-							$userRepo				= json_decode((string)$results2['userRepo']['value']->getBody(),true);
-							$userRepoCommits		= json_decode((string)$results2['userRepoCommits']['value']->getBody(),true);
-							$userRepoPullRequests 	= json_decode((string)$results2['userRepoPullRequests']['value']->getBody(),true);
-							$userRepoContributors	= json_decode((string)$results2['userRepoContributors']['value']->getBody(),true);
-							$userRepoLanguages 		= json_decode((string)$results2['userRepoLanguages']['value']->getBody(),true);
-							$userRepoBranches 		= json_decode((string)$results2['userRepoBranches']['value']->getBody(),true);
-							$userRepoLabels 		= json_decode((string)$results2['userRepoLabels']['value']->getBody(),true);
-							$userRepoEvents 		= json_decode((string)$results2['userRepoEvents']['value']->getBody(),true);
-							$userRepoIssues 		= json_decode((string)$results2['userRepoIssues']['value']->getBody(),true);
-							$userRepoIssuesComments = json_decode((string)$results2['userRepoIssuesComments']['value']->getBody(),true);
-							$userRepoPullsComments 	= json_decode((string)$results2['userRepoPullsComments']['value']->getBody(),true);
-							$userRepoMilestones 	= json_decode((string)$results2['userRepoMilestones']['value']->getBody(),true);
-							array_push($results[$i],[	
-														'thisUserRepo' =>$userRepo,
-														'thisUserRepoCommits' =>$userRepoCommits,
-														'thisUserRepoPullRequests' =>$userRepoPullRequests,
-														'thisUserRepoContributors' =>$userRepoContributors,
-														'thisUserRepoLanguages' =>$userRepoLanguages,
-														'thisUserRepoBranches' =>$userRepoBranches,
-														'thisUserRepoLabels' =>$userRepoLabels,
-														'thisUserRepoEvents ' =>$userRepoEvents ,
-														'thisUserRepoIssues =' =>$userRepoIssues,
-														'thisUserRepoIssuesComments' =>$userRepoIssuesComments,
-														'thisUserRepoPullsComments ' =>$userRepoPullsComments, 
-														'thisUserRepoMilestones' =>$userRepoMilestones,   		 
-													]);
-							array_push($array, $results[$i]);
-						}
-						return response()->json(['data'=> $array],'200');
-					}   
-		            else
-		            {
-		                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');
-		            }
-		        } 
-		        catch (ClientException $e) 
-		        {
-		            if($e->getResponse()->getStatusCode()==401)
-		            {
-		                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');	            
-		            }
-		        }    		
-	    }	
-	
-    /* Get Authenticated User's Organsations .
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 *
-	 */
-	    public function getAuthUserOrgsOnly(Request $request)
-	    {
-	    	dd('dgfdssadsfg');
-	    	try 
-	        {
-	            if(Cache::has('git_Oauth_token'))
-	            {
-	        
-	                $token = Cache::get('git_Oauth_token');
-	                // dd($token);
-		    		$authUser = new \GuzzleHttp\Client;    	
-		    		$resp = $authUser->get('https://api.github.com/user/orgs',	    	 
-				    [
-				    	'headers' =>[
-							        	'Accept'     => 'application/json',
-							        	'Content-Type'     => 'application/json',
-							        	'Authorization'	=> 'Bearer '.$token,
-		        					]
-		    		]);
-		    		return $resp->getbody();
-
-	            }   
-	            else
-	            {
-	                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');
-	            }
-	        } 
-	        catch (ClientException $e) 
-	        {
-	            if($e->getResponse()->getStatusCode()==401)
-	            {
-	                return response()->json(['error'=>'Unauthorised To Use GitHub Endpoints', 'code'=>'401'], '401');    
-	            }
-
-	        }
-	    }
-	
-	 /* Store access token in Cache.
-	 *
-	 * @param  $data
-	 *
-	 */
-	    public function storeAccessTokenInCache($data)
-	    {	
-	    	Cache::forever('git_Oauth_token',$data);
-	    	return response()->json(['message'=>'Success', 'code'=>'200', 'access_token'=>Cache::get('git_Oauth_token')], '200');	
-	    }
+	/* Store access token in Cache.
+	*
+	* @param  $data
+	*
+	*/
+    public function storeAccessTokenInCache($data)
+    {	
+    	Cache::forever('git_Oauth_token',$data);
+    	return response()->json(['message'=>'Success', 'code'=>'200', 'access_token'=>Cache::get('git_Oauth_token')], '200');	
+    }
 }
