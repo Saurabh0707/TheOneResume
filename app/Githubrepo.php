@@ -36,6 +36,10 @@ class Githubrepo extends Model
     {
         return $this->hasMany('App\Repocommit');
     }
+    public function repoPRs()
+    {
+        return $this->hasMany('App\RepoPR');
+    }
     public function githubuser()
 	{
     	return $this->belongsTo('App\Githubuser');

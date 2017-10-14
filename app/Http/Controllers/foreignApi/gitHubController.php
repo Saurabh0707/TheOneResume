@@ -36,7 +36,7 @@ class gitHubController extends ApiController
     public function showdata()
     {	        
         $x = Auth::user('api')->id;
-        $data = User::with('githubusers.githubrepos.repobranches','githubusers.githubrepos.repocommits','githubusers.githubrepos.repocontributors','githubusers.githubrepos.repolangs')->find($x);
+        $data = User::with('githubusers.githubrepos.repobranches','githubusers.githubrepos.repocommits','githubusers.githubrepos.repocontributors','githubusers.githubrepos.repolangs','githubusers.githubrepos.repoPRs')->find($x);
         return response()->json(['data' => ['userRepoData'=>$data], 'code'=> 200],200);
     }
 	
@@ -336,7 +336,26 @@ class gitHubController extends ApiController
 	            		'lines'					=>		$repolang["lines"],
 	     			];	
 	     			$insertedGithubRepoLang = $insertedGithubRepo->repolangs()->firstOrCreate($insertGithubRepoLangs);	   
-	     			}
+	     		}
+	     		foreach($githubrepo['repoPRs'] as $repoPR)
+				{
+					$insertGithubRepoPRs =
+					[
+	            		'name'					=>		$repoPR["name"],
+	            		"state"					=>		$repoPR["state"],
+	            		"title"					=>		$repoPR["title"],
+	            		"body"					=>		$repoPR["body"],
+	            		"assignee"				=>		$repoPR["assignee"],
+	            		"creator"				=>		$repoPR["creator"], 
+	            		"open_issues"			=>		$repoPR["open_issues"],
+	            		"closed_issues"			=>		$repoPR["closed_issues"],
+	            		"created_at"			=>		$repoPR["created_at"], 
+	            		"updated_at"			=>		$repoPR["updated_at"],
+	            		"closed_at"				=>		$repoPR["closed_at"],
+	            		"merged_at"				=>		$repoPR["merged_at"],
+	     			];	
+	     			$insertedGithubRepoPR = $insertedGithubRepo->repoPRs()->firstOrCreate($insertGithubRepoPRs);	   
+	     		}
 			}
         }
 	}
