@@ -11,6 +11,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // $this->call(UsersTableSeeder::class);
-    }
+        //App\User::truncate();
+        
+        
+         $this->call(userTableSeeder::class);
+         //$this->call(githubuserTableSeeder::class);
+          $this->call(githubrepoTableSeeder::class);
+         // $this->call(repobrancheTableSeeder::class);
+         // $this->call(repocommitTableSeeder::class);
+         // $this->call(repocontributorTableSeeder::class);
+         // $this->call(repolangTableSeeder::class);
+	}
 }
