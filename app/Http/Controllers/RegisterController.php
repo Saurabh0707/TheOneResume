@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
@@ -21,11 +21,11 @@ class RegisterController extends ApiController
 
     }
     //function to retrieve the client credentials
-    public function getClient($client_id)
-    {
-        //dynamically retrieving the client_id and secret
-        $this->client=Client::find($client_id);
-    }
+    // public function getClient($client_id)
+    // {
+    //     //dynamically retrieving the client_id and secret
+    //     $this->client=Client::find($client_id);
+    // }
      /**
      * Register a user.
      *
@@ -40,12 +40,15 @@ class RegisterController extends ApiController
                         'password'=>'required|min:6|confirmed',
                 ];
         $this->validate($request,$rules);
-        $this->getClient(request('client_id'));
-        $user = User::Create($request->all());
+        $user = User::create([
+            'name' => $request['name'],
+            'email' => $request['email'],
+            'password' => bcrypt($request['password']),
+            ]);
         $params=[
             'grant_type'=>'password',
-            'client_id'=>$this->client->id,
-            'client_secret'=>$this->client->secret,
+            'client_id'=>request('client_id'),
+            'client_secret'=>request('client_secret'),
             'username'=>request('email'),
             'password'=>request('password'),
             'scope'=>'*'

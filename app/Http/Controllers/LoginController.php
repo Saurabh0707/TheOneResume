@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
@@ -22,11 +22,11 @@ class LoginController extends ApiController
         
     }
     //function to retrieve the client credentials
-    public function getClient($client_id)
-    {
-        //dynamically retrieving the client_id and secret
-        $this->client=Client::find($client_id);
-    }
+    // public function getClient($client_id)
+    // {
+    //     //dynamically retrieving the client_id and secret
+    //     $this->client=Client::find($client_id);
+    // }
     /**
      * Login a user.
      *
@@ -38,11 +38,10 @@ class LoginController extends ApiController
                         'password'=>'required|min:6',
                 ];
         $this->validate($request,$rules);  
-        $this->getClient(request('client_id'));              
         $params=[
                 'grant_type'=>'password',
-                'client_id'=>$this->client->id,
-                'client_secret'=>$this->client->secret,
+                'client_id'=>request('client_id'),
+                'client_secret'=>request('client_secret'),
                 'username'=>request('email'),
                 'password'=>request('password'),
                 'scope'=>'*'

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
@@ -21,12 +21,6 @@ class LogoutController extends ApiController
     {
         $this->middleware('auth:api');
     }
-    //function to retrieve the client credentials
-    public function getClient($client_id)
-    {
-        //dynamically retrieving the client_id and secret
-        $this->client=Client::find($client_id);
-    }
     /**
      * Refresh A token.
      *
@@ -36,11 +30,10 @@ class LogoutController extends ApiController
         $this->validate($request,[
             'refresh_token'=>'required',
         ]);
-        $this->getClient(request('client_id'));        
         $params=[
             'grant_type'=>'refresh_token',
-            'client_id'=>$this->client->id,
-            'client_secret'=>$this->client->secret,
+            'client_id'=>request('client_id'),
+            'client_secret'=>request('client_secret'),
             'username'=>request('username'),
             'password'=>request('password'),
         ];
