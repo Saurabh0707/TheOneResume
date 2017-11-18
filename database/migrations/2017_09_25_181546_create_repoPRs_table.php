@@ -13,7 +13,7 @@ class CreateRepoPRsTable extends Migration
      */
     public function up()
     {
-        Schema::create('repoPRs', function (Blueprint $table) {
+        Schema::create('repo_p_rs', function (Blueprint $table) {
             $table->increments('id')->unsigned();
             $table->integer('githubrepo_id')->unsigned();
             $table->integer('open_issues')->unsigned();
@@ -28,7 +28,7 @@ class CreateRepoPRsTable extends Migration
             $table->dateTimeTz('pr_merged_at');
             $table->timestamps();
         });
-        Schema::table('repoPRs', function (Blueprint $table) 
+        Schema::table('repo_p_rs', function (Blueprint $table) 
         {
           $table->foreign('githubrepo_id')->references('id')->on('githubrepos')->onDelete('cascade');;
         });

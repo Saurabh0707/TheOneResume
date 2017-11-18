@@ -32,5 +32,4 @@ Route::post('/github/users/store','github\githubController@store');
 Route::post('/github/users/update','github\githubController@update');
 //get user's all github data stored in db
 Route::get('/github/thisuser','github\githubController@showdata');
-//developer and client
-Route::get('/developer/clients','developer\admin\clientController@createClient')->name('create-client');
+Route::get('/github/showthisuser/{username}','github\githubController@showUser');

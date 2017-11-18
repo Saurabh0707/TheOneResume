@@ -34,16 +34,16 @@ class LoginController extends ApiController
     public function login(Request $request)
     {
          $rules = [
-                        'email'=>'required',
-                        'password'=>'required|min:6',
+                        'loginEmail'=>'required',
+                        'loginPwd'=>'required|min:6',
                 ];
         $this->validate($request,$rules);  
         $params=[
                 'grant_type'=>'password',
                 'client_id'=>request('client_id'),
                 'client_secret'=>request('client_secret'),
-                'username'=>request('email'),
-                'password'=>request('password'),
+                'username'=>request('loginEmail'),
+                'password'=>request('loginPwd'),
                 'scope'=>'*'
             ];
         $request->request->add($params);

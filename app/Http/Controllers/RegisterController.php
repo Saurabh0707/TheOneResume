@@ -35,22 +35,22 @@ class RegisterController extends ApiController
     public function register(Request $request)
     {
         $rules = [
-                        'name'=>'required',
-                        'email'=>'required|email|unique:users,email',
-                        'password'=>'required|min:6|confirmed',
+                        'registerName'=>'required',
+                        'registerEmail'=>'required|email|unique:users,email',
+                        'registerPwd'=>'required|min:6',
                 ];
         $this->validate($request,$rules);
         $user = User::create([
-            'name' => $request['name'],
-            'email' => $request['email'],
-            'password' => bcrypt($request['password']),
+            'name' => $request['registerName'],
+            'email' => $request['registerEmail'],
+            'password' => bcrypt($request['registerPwd']),
             ]);
         $params=[
             'grant_type'=>'password',
             'client_id'=>request('client_id'),
             'client_secret'=>request('client_secret'),
-            'username'=>request('email'),
-            'password'=>request('password'),
+            'username'=>request('registerEmail'),
+            'password'=>request('registerPwd'),
             'scope'=>'*'
         ];
 
