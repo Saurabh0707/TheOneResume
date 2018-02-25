@@ -26,4 +26,20 @@ class User extends Authenticatable
     {
         return $this->hasMany('App\Githubuser');
     }
+    public function skills()
+    {
+        return $this->hasMany('App\Skill');
+    }
+    public function educations()
+    {
+        return $this->hasMany('App\Education');
+    }
+    public function works()
+    {
+        return $this->hasMany('App\Work');
+    }
+    public function achievements()
+    {
+        return $this->hasMany('App\Achievement');
+    }
 }
