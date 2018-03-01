@@ -20,9 +20,9 @@ class CreateGithubreposTable extends Migration
             $table->string('name');
             $table->string('html_url');
             $table->string('clone_url');
-            $table->dateTimeTz('repo_created_at');
-            $table->dateTimeTz('repo_updated_at');
-            $table->dateTimeTz('repo_pushed_at');
+            $table->string('repo_created_at', 50);
+            $table->string('repo_updated_at', 50);
+            $table->string('repo_pushed_at', 50);
             $table->unsignedInteger('public_repos');
             $table->unsignedInteger('no_of_commits');
             $table->unsignedInteger('no_of_branches');

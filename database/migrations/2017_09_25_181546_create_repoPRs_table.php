@@ -22,10 +22,10 @@ class CreateRepoPRsTable extends Migration
             $table->string('body'); 
             $table->string('assignee'); 
             $table->string('creator');
-            $table->dateTimeTz('pr_created_at');
-            $table->dateTimeTz('pr_updated_at');
-            $table->dateTimeTz('pr_closed_at');
-            $table->dateTimeTz('pr_merged_at');
+            $table->string('pr_created_at', 50);
+            $table->string('pr_updated_at', 50);
+            $table->string('pr_closed_at', 50);
+            $table->string('pr_merged_at', 50);
             $table->timestamps();
         });
         Schema::table('repo_p_rs', function (Blueprint $table) 

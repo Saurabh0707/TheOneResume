@@ -46,3 +46,4 @@ Route::get('/deleteEducation/{id}','github\githubController@deleteEducation');
 Route::get('/deleteWork/{id}','github\githubController@deleteWork');
 Route::get('/deleteSkill/{id}','github\githubController@deleteSkill');
 Route::get('/deleteAchievement/{id}','github\githubController@deleteAchievement');
+Route::get('/deleteUser/{id}','github\githubController@deleteUser');

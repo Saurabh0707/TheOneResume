@@ -253,13 +253,16 @@ class githubController extends ApiController
 		$inputs = $request->all();	    
 		$x = Auth::user('api')->id;
 		$user= User::find($x);		
-		$existingUser  =  $user->githubusers()->where('username', $inputs['data']['userRepoData']['githubusers']['username'])->first();
+		$existingUser  =  $user->githubusers()->where('username', $inputs['userRepoData']['githubusers']['username'])->first();
 		if(!$existingUser)
 	    {
-	    	 return response()->json(['message'=>'User Already Exists','code'=>406],406);
-	    }
-	    $this->insertIntoTables($user, $inputs);
-		return response()->json(['message' => 'Records Saved', 'code'=> 200],200);				          
+	    	 
+	    	$this->insertIntoTables($user, $inputs);
+			return response()->json(['message' => 'Records Updated', 'code'=> 200],200);				
+		}
+		else {
+			return response()->json(['message'=>'User Already Exists','code'=>406],406);
+		}	             
 	}
 	public function update(Request $request)
 	{
@@ -267,8 +270,8 @@ class githubController extends ApiController
 		$x = Auth::user('api')->id;
 		$user= User::find($x);
 		
-		$existingUser  =  $user->githubusers()->where('username', $inputs['data']['userRepoData']['githubusers']['username'])->first();
-		if($existingUser)
+		$existingUser  =  $user->githubusers()->where('username', $inputs['userRepoData']['githubusers']['username'])->first();
+		if(!$existingUser)
 	    {
 	    	 return response()->json(['message'=>'User Not Found', 'code'=>404],404);
 	    }
@@ -279,23 +282,23 @@ class githubController extends ApiController
 	    $this->insertIntoTables($user, $inputs);
 	    return response()->json(['message' => 'Records Updated', 'code'=> 200],200);				          
 	}
-    private function insertIntoTables($inputs, $user)
+    private function insertIntoTables($user, $inputs)
 	{
-		foreach($inputs['data']['userRepoData']['githubusers'] as $githubuser)
+		foreach($inputs['userRepoData']['githubusers'] as $githubuser)
 		{
             $insertGithubUser =[
-            		'username'			=>		$githubuser["username"],
-            		'html_url'			=>		$githubuser["html_url"],
-            		'name'				=>		$githubuser["name"],
-            		'company'			=>		$githubuser["company"],
-            		'location'			=>		$githubuser["location"],
-            		'user_created_at'	=>		$githubuser["user_created_at"],
-            		'user_updated_at'	=>		$githubuser["user_updated_at"],
-            		'public_repos'		=>		$githubuser["public_repos"],
-            		'public_gists'		=>		$githubuser["public_gists"],
+            		'username'			=>		$inputs['userRepoData']['githubusers']["username"],
+            		'html_url'			=>		$inputs['userRepoData']['githubusers']["html_url"],
+            		'name'				=>		$inputs['userRepoData']['githubusers']["name"],
+            		'company'			=>		$inputs['userRepoData']['githubusers']["company"],
+            		'location'			=>		$inputs['userRepoData']['githubusers']["location"],
+            		'user_created_at'	=>		$inputs['userRepoData']['githubusers']["user_created_at"],
+            		'user_updated_at'	=>		$inputs['userRepoData']['githubusers']["user_updated_at"],
+            		'public_repos'		=>		$inputs['userRepoData']['githubusers']["public_repos"],
+            		'public_gists'		=>		$inputs['userRepoData']['githubusers']["public_gists"],
     		];
     		$insertedGithubUser = $user->githubusers()->firstOrCreate($insertGithubUser);
-    		foreach($githubuser['githubrepos'] as $githubrepo)
+    		foreach($inputs['userRepoData']['githubusers']['githubrepos'] as $githubrepo)
 			{
 				 $insertGithubRepo =[
             		'owner'					=>		$githubrepo["owner"],
@@ -319,9 +322,9 @@ class githubController extends ApiController
 	            		'sha'						=>      $repocommit["sha"],
 	            		'author'					=>		$repocommit["author"],
 	            		'committer'					=>		$repocommit["committer"],
-	            		'message'				=>		$repocommit["message"],
-	            		'commit_created_at'				=>		$repocommit["commit_created_at"],
-	            		'commit_updated_at'		=>		$repocommit["commit_updated_at"],
+	            		'message'					=>		substr($repocommit["message"],0,100).'...',
+	            		'commit_created_at'			=>		$repocommit["commit_created_at"],
+	            		'commit_updated_at'			=>		$repocommit["commit_updated_at"],
     				];
     			 	$insertedGithubRepoCommit = $insertedGithubRepo->repocommits()->firstOrCreate($insertGithubRepoCommits);
 				}
@@ -351,7 +354,7 @@ class githubController extends ApiController
 	     			];	
 	     			$insertedGithubRepoLang = $insertedGithubRepo->repolangs()->firstOrCreate($insertGithubRepoLangs);	   
 	     		}
-	     		foreach($githubrepo['repoPRs'] as $repoPR)
+	     		foreach($githubrepo['repo_p_rs'] as $repoPR)
 				{
 					$insertGithubRepoPRs =
 					[
@@ -371,7 +374,7 @@ class githubController extends ApiController
 	     			$insertedGithubRepoPR = $insertedGithubRepo->repoPRs()->firstOrCreate($insertGithubRepoPRs);	   
 	     		}
 			}
-        }
+         }
 	}
 	/* Store access token in Cache.
 	*
@@ -529,5 +532,15 @@ class githubController extends ApiController
 		    {
 		    	return response()->json(['message'=>'Failure', 'code'=>201],201);
 		    }	
+    }
+    public function deleteUser($id){
+    	$x = Auth::user('api')->id;
+		$user= User::find($x);		
+		$deleteUsers  =  $user->githubusers()->where('id', $id)->delete();
+		if(!$deleteUsers){
+			return response()->json(['message'=>'Failure', 'code'=>201], 201);
+		}else{
+			return response()->json(['message'=>'Success', 'code'=>200], 200);
+		}
     }
 }
